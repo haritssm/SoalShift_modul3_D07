@@ -63,4 +63,5 @@ int main(int argc, char* argv[])
     	pthread_create(&(tid[i]), NULL, &factorial, &array[i]);
     	pthread_join(tid[i], NULL); //buat nunggu faktorialnya selesai satu-satu
     }
+	
 }
