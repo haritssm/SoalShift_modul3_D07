@@ -207,3 +207,173 @@ void* print(void *arg){
 }
 ```
 
+Untuk bagian user, user dapat memilih server mana yang akan terkoneksi dengan cara menginputkan addressnya. Setelah terkoneksi, user dapat menginputkan "tambah" untuk menambah stok barang, "beli" untuk mengurangi stok barang.
+```
+#include <stdio.h>
+#include <sys/socket.h>
+#include <stdlib.h>
+#include <netinet/in.h>
+#include <string.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+#define PORT 8080
+
+int main(int argc, char const *argv[]) {
+    	struct sockaddr_in address;
+    	int sock = 0, valread,x=0;
+    	struct sockaddr_in serv_addr;
+    	char *arg,str[100],ad[10];
+    	//char buffer[1024] = {0};
+	while(1){
+		printf("Connecting to server...\n");
+		scanf("%s",ad);
+    		if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        		printf("\n Socket creation error \n");
+        		return -1;
+    		}
+
+    		memset(&serv_addr, '0', sizeof(serv_addr));
+
+    		serv_addr.sin_family = AF_INET;
+    		serv_addr.sin_port = htons(PORT);
+
+		//scanf("%s",ad);
+
+    		if(inet_pton(AF_INET, ad, &serv_addr.sin_addr)<=0) {
+        		printf("\nInvalid address/ Address not supported \n");
+        		return -1;
+    		}
+
+    		if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
+        		printf("\nConnection Failed \n");
+        		return -1;
+    		}
+		if(strcmp(ad,"127.0.0.1")==0) printf("Connected to server Penjual\n");
+		if(strcmp(ad,"127.0.0.2")==0) printf("Connected to server Pembeli\n");
+
+		//printf("Connected to server!\n");
+
+		while(1){
+			scanf("%s",str);
+			arg = str;
+			if(strcmp(str,"tambah")==0 && strcmp(ad,"127.0.0.1")==0){
+				send(sock,arg,strlen(arg),0);
+			}
+			if(strcmp(str,"beli")==0 && strcmp(ad,"127.0.0.2")==0){
+				send(sock,arg,strlen(arg),0);
+			}
+			if(strcmp(str,"exit")==0){
+				send(sock,arg,strlen(arg),0);
+				break;
+			}
+			if(strcmp(str,"exitexit")==0){
+				send(sock,arg,strlen(arg),0);
+				x=1;
+				break;
+			}
+		}
+		if(x==1){
+			x=0; 
+			break;
+		}
+	}
+
+	/*
+    	send(sock , hello , strlen(hello) , 0 );
+    	printf("Hello message sent\n");
+    	valread = read( sock , buffer, 1024);
+    	printf("%s\n",buffer );
+	*/
+    	return 0;
+}
+```
+
+## Soal 3:
+Pada soal no 3, diharuskan untuk membuat program yang dapat melakukan beberapa fitur secara bersamaan. Soal ini dikemas dalam bentuk cerita untuk membuat yang lain tidur atau yang lainnya untuk bangun.
+
+### Penyelesaian:
+Kami membuat 4 thread yang memiliki kegunaan seperti membaca input, status Agmal, status Iraj, dan untuk menghentikan program. Input akan dilakukan secara terus menerus. Jika input merupakan "All Status" maka akan diprint status dari Agmal dan Iraj. Jika "Agmal Ayo Bangun" akan menjalakan fungsi pada thread A (menambahkan status Agmal) dan "Iraj Ayo Tidur" akan dijalankan B (mengurangi status pada Iraj).
+```
+int WakeUp_Status,Spirit_Status;
+int Agmal,Iraj,Ag,Ir;
+
+void* A(void *args){
+	while(1){
+		//if(x==1) break;
+		if(Iraj==3){
+			printf("Agmal Ayo Bangun disabled 10 s\n");
+			Ag=0;
+			sleep(10);
+			Iraj=0;//revisi
+		}
+		if(Ag==1){
+			WakeUp_Status+=15;
+			Agmal++;
+			Ag=0;
+		}
+		sleep(1);
+	}
+}
+
+void* I(void *args){
+	while(1){
+		//if(x==1) break;
+		if(Agmal==3){
+			printf("Iraj Ayo Tidur disabled 10 s\n");
+			Ir=0;
+			sleep(10);
+			Agmal=0;//revisi
+		}
+		if(Ir==1){
+			Spirit_Status-=20;
+			Iraj++;
+			Ir=0;
+		}
+		sleep(1);
+	}
+}
+
+void* in(void *args){
+	char str[50];
+	while(1){
+		scanf("%s",str);
+		if(strcmp(str,"exit")==0){
+			//x=1;
+			//break;
+			exit(0);
+		}
+		if(strcmp(str,"All_Status")==0) printf("Agmal WakeUp_Status= %d\nIraj Spirit_Status= %d\n",WakeUp_Status,Spirit_Status);
+		if(strcmp(str,"agmal_ayo_bangun")==0){
+			Ag=1;
+		}
+		if(strcmp(str,"iraj_ayo_tidur")==0){
+			Ir=1;
+		}
+		sleep(1);
+	}
+}
+
+void* fitur(void *args){//buat masing2 fitur thread sendiri2
+	while(1){
+		//if(x==1) break;
+		if(WakeUp_Status>99){
+			printf("Agmal Terbangun, mereka bangun pagi dan berolahraga\n");
+			//x=1;
+			//break;
+			exit(0);
+		}
+		if(Spirit_Status<1){
+			printf("Iraj ikut tidur, dan bangun kesiangan bersama Agmal\n");
+			//x=1;
+			//break;
+			exit(0);
+		}
+		//sleep(1);
+	}
+}
+```
+
+Proses diatas dilakukan menggunakan thread.
+
+## Soal 4:
+Soal no 4, diharuskan untuk
